@@ -1,7 +1,9 @@
 package controllers
 
+// hxvp nuow mlnn mkii
 import (
 	"fmt"
+	"os"
 
 	s "strings"
 
@@ -12,7 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const Secret = "rCLwngnP26347Hkdu8386vwsb"
+var Secret = os.Getenv("Secret")
 
 func Register(c *fiber.Ctx) error {
 	var data map[string]string
@@ -42,6 +44,13 @@ func Register(c *fiber.Ctx) error {
 		Posts:    []models.Post{},
 	}
 	result := database.DB.Create(&user)
+	dev := os.Getenv("DEV_MAIL")
+	content := "Thank You for Registering to our website\n" +
+		"\nThis is a Test blog website still in development\n" +
+		"\nIf you find any bug, feel free to contact dev on " + dev + "\n" +
+		"\nYours Sincerely\n" +
+		"\nAnimish Sharma"
+	utils.SendMail(c, user.Email, "Registered Successfully", content)
 
 	if result.Error != nil {
 		return c.JSON(

@@ -13,10 +13,22 @@ import (
 	"github.com/gosimple/slug"
 )
 
+type Result struct {
+	ID        uint   `json:"id"`
+	Name      string `json:"author"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	Slug      string `json:"slug"`
+	Image     string `json:"image"`
+	CreatedAt int    `json:"created_at"`
+}
+
 func PostList(c *fiber.Ctx) error {
-	var posts []models.Post
-	database.DB.Scopes(utils.Paginate(c)).Find(&posts)
-	return c.JSON(fiber.Map{"posts": posts})
+	var result []Result
+
+	database.DB.Scopes(utils.Paginate(c)).Model(&models.Post{}).Select("*").Joins("join users on users.id=posts.author").Scan(&result)
+	fmt.Println(&result)
+	return c.JSON(fiber.Map{"posts": result})
 }
 
 func PostDetail(c *fiber.Ctx) error {
@@ -24,7 +36,7 @@ func PostDetail(c *fiber.Ctx) error {
 
 	var post models.Post
 	var user models.User
-	database.DB.Where("slug = ?", slug).First(&post)
+	database.DB.Where("slug = ?", slug).Preload("Reviews").First(&post)
 	database.DB.Model(&models.User{}).Where("ID = ?", post.Author).First(&user)
 
 	if post.ID == 0 {
