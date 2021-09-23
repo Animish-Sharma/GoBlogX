@@ -1,10 +1,9 @@
 package utils
 
 import (
-	"time"
-
 	"strconv"
-	s "strings"
+	"strings"
+	"time"
 
 	"github.com/Animish-Sharma/blog/backend/database"
 	"github.com/Animish-Sharma/blog/backend/models"
@@ -41,8 +40,9 @@ func GenerateJwt(c *fiber.Ctx, user models.User) interface{} {
 }
 
 func VerifyJwt(c *fiber.Ctx) (*models.User, error) {
+
 	auth := c.Get("Authorization")
-	bearer := s.Split(auth, " ")[1]
+	bearer := strings.Split(auth, " ")[1]
 
 	token, err := jwt.ParseWithClaims(bearer, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(Secret), nil

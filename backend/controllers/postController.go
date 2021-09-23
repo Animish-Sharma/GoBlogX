@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -14,43 +13,32 @@ import (
 )
 
 type Result struct {
-	ID        uint   `json:"id"`
-	Name      string `json:"author"`
-	Title     string `json:"title"`
-	Content   string `json:"content"`
-	Slug      string `json:"slug"`
-	Image     string `json:"image"`
-	CreatedAt int    `json:"created_at"`
+	ID        uint       `json:"id"`
+	AuthorID  uint       `json:"author_id"`
+	Name      string     `json:"author"`
+	Title     string     `json:"title"`
+	Content   string     `json:"content"`
+	Slug      string     `json:"slug"`
+	Category  string     `json:"category"`
+	Image     string     `json:"image"`
+	CreatedAt int        `json:"created_at"`
+	Reviews   [][]string `json:"reviews"`
 }
 
 func PostList(c *fiber.Ctx) error {
 	var result []Result
 
-	database.DB.Scopes(utils.Paginate(c)).Model(&models.Post{}).Select("*").Joins("join users on users.id=posts.author").Scan(&result)
-	fmt.Println(&result)
+	database.DB.Scopes(utils.Paginate(c)).Model(&models.Post{}).Select("*").Joins("join users on users.id=posts.author").Order("created_at Desc").Scan(&result)
 	return c.JSON(fiber.Map{"posts": result})
 }
 
 func PostDetail(c *fiber.Ctx) error {
 	slug := c.Params("slug")
-
-	var post models.Post
-	var user models.User
-	database.DB.Where("slug = ?", slug).Preload("Reviews").First(&post)
-	database.DB.Model(&models.User{}).Where("ID = ?", post.Author).First(&user)
-
-	if post.ID == 0 {
-		c.Status(fiber.StatusNotFound)
-		return c.JSON(
-			fiber.Map{
-				"error": "Post does not exist",
-			},
-		)
-	}
+	var result Result
+	database.DB.Model(&models.Post{}).Where("slug = ?", slug).Select("*").Joins("join users on users.id=posts.author").Order("created_at Desc").Preload("Reviews").Scan(&result)
 
 	return c.JSON(fiber.Map{
-		"post":   post,
-		"author": user,
+		"post": result,
 	})
 }
 
@@ -63,12 +51,12 @@ func PostCreate(c *fiber.Ctx) error {
 
 	user, _ := utils.VerifyJwt(c)
 	image, _ := utils.ImageUpload(c)
-	fmt.Println(image)
 	imageUrl := image["imageUrl"].(string)
 
 	title_s := form.Value["title"]
 
 	title := strings.Join(title_s, " ")
+
 	slug := slug.Make(title)
 
 	var ex_post *models.Post
@@ -88,11 +76,13 @@ func PostCreate(c *fiber.Ctx) error {
 	}
 
 	content := strings.Join(form.Value["content"], " ")
+	category := strings.Join(form.Value["category"], " ")
 
 	post := models.Post{
 		Title:     title,
 		Content:   content,
 		Image:     imageUrl,
+		Category:  category,
 		Slug:      slug,
 		CreatedAt: int(time.Now().Local().Unix()),
 		Author:    user.ID,
@@ -116,6 +106,9 @@ func PostUpdate(c *fiber.Ctx) error {
 	user, _ := utils.VerifyJwt(c)
 	slug_s := strings.Join(form.Value["slug"], " ")
 	database.DB.Model(&models.Post{}).Where("slug = ?", slug_s).First(&post)
+	if post.Author != user.ID {
+		return c.JSON(fiber.Map{"error": "You are not the owner of this post"})
+	}
 
 	title := strings.Join(form.Value["title"], " ")
 	slug_n := slug.Make(title)
@@ -169,4 +162,14 @@ func PostDelete(c *fiber.Ctx) error {
 	database.DB.Model(&user).Association("Posts").Delete([]models.Post{*post})
 	database.DB.Model(&post).Delete(&post)
 	return c.JSON(fiber.Map{"success": "Post deleted successfully"})
+}
+
+func CategorySearch(c *fiber.Ctx) error {
+	var result []Result
+	var data map[string]string
+	if err := c.BodyParser(&data); err != nil {
+		panic(err)
+	}
+	database.DB.Scopes(utils.Paginate(c)).Model(&models.Post{}).Where("category = ?", data["category"]).Select("*").Joins("join users on users.id=posts.author").Order("created_at Desc").Scan(&result)
+	return c.JSON(fiber.Map{"posts": result})
 }

@@ -11,4 +11,5 @@ func Setup(app *fiber.App) {
 	app.Post("/api/post/create", controllers.PostCreate)
 	app.Post("/api/post/update", controllers.PostUpdate)
 	app.Delete("/api/post/delete/:slug", controllers.PostDelete)
+	app.Post("/api/category", controllers.CategorySearch)
 }

@@ -15,6 +15,7 @@ type Post struct {
 	Title     string   `json:"title"`
 	Content   string   `json:"content"`
 	Image     string   `json:"image"`
+	Category  string   `json:"category"`
 	Slug      string   `json:"slug" gorm:"unique:true"`
 	CreatedAt int      `json:"created"`
 	Author    uint     `json:"author"`

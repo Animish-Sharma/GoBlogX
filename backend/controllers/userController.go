@@ -1,6 +1,5 @@
 package controllers
 
-// hxvp nuow mlnn mkii
 import (
 	"fmt"
 	"os"
