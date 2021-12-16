@@ -10,4 +10,5 @@ func Route(app *fiber.App) {
 	app.Post("/login", controllers.Login)
 	app.Post("/update", controllers.UserUpdate)
 	app.Get("/get-posts", controllers.UserPost)
+	app.Get("/user/:username", controllers.OtherProfiles)
 }

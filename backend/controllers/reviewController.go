@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"strconv"
 	s "strings"
 
@@ -10,21 +11,22 @@ import (
 	"github.com/gofiber/fiber"
 )
 
+type I struct {
+	Title string `json:"title"`
+}
+
 func ReviewCreate(c *fiber.Ctx) error {
-	user, _ := utils.VerifyJwt(c)
-	var ex_review *models.Review
+	user, e := utils.VerifyJwt(c)
+	if e != nil {
+		fmt.Print(e)
+	}
 	var data map[string]string
 
 	if err := c.BodyParser(&data); err != nil {
 		panic(err)
 	}
 	post_id, _ := strconv.Atoi(data["post_id"])
-	database.DB.Model(&models.Review{}).Where("Author = ?", user.ID).Where("PostID = ?", post_id).First(&ex_review)
-	if ex_review != nil {
-		return c.JSON(
-			fiber.Map{"error": "Already have a comment in the post"},
-		)
-	}
+
 	if len(s.TrimSpace(data["comment"]))|len(s.TrimSpace(data["title"])) == 0 {
 		return c.JSON(fiber.Map{
 			"error": "fill all the fields",

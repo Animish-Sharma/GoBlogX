@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-
+import { useHistory } from 'react-router-dom'
 export default function Card({ posts }){
+    const history = useHistory();
     const capitalizeLetter= (word) =>{
         if(word)
             return word.charAt(0).toUpperCase() + word.slice(1);
@@ -18,9 +19,10 @@ export default function Card({ posts }){
                 <div className="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
                     <div className="col p-4 d-flex flex-column position-static">
                         <img height="250" width="400" src={post.image} alt="thumbnail"/>
-                        <strong className="d-inline-block mb-2 text-primary">{capitalizeLetter(post.category)}</strong>
+                        <strong onClick={e=> {e.stopPropagation(); history.push(`/category/${post.category}`)}} className="d-inline-block mb-2 text-primary">{capitalizeLetter(post.category)}</strong>
                         <h3 className="mb-0 display-5">{cutOff(post.title,20)}</h3>
                         <p className="card-text mb-auto">{cutOff(post.content,100)}</p>
+                        <Link onClick={(e)=>{e.stopPropagation()}} to={`/users/${post.author}`}>{post.author}</Link>
                         <Link to={`/post/${post.slug}`} className="stretched-link">Continue reading....</Link>
                     </div>
                     <div className="d-none d-lg-block">

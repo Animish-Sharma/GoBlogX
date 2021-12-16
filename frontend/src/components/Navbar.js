@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import { useDispatch } from 'react-redux'
+import { useSelector,useDispatch } from 'react-redux'
 import { logout } from '../actions/auth'
+import { useHistory } from 'react-router-dom'
+import { useState } from 'react'
 const Navbar = () =>{
+    const history = useHistory()
+    const [search,setSearch] = useState("")
     const isAuthenticated = useSelector(state=> state.auth.isAuthenticated);
     const dispatch = useDispatch()
     const authLinks =(
@@ -17,6 +20,12 @@ const Navbar = () =>{
             <Link className="nav-link active" aria-current="page" to="/signup">Sign Up</Link>
         </div>
     )
+    const onChange = (e) => setSearch(e.target.value);
+    const onSubmit =(e) =>{
+        e.preventDefault();
+        let term = search.replace(" ","+")
+        history.push(`/search/${term}`)
+    }
     return(
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark pb-2">
         <div className="container-fluid">
@@ -34,9 +43,9 @@ const Navbar = () =>{
                 </li>
                 
             </ul>
-            <form className="d-flex">
-                <input className="form-control form-control-sm me-2" type="search" placeholder="Search Query" aria-label="Search"/>
-                <button type="button" className="btn btn-primary btn-sm">Search</button>
+            <form onSubmit={onSubmit} className="d-flex">
+                <input onChange={onChange} className="form-control form-control-sm me-2" name="seach" type="search" placeholder="Search Query" aria-label="Search"/>
+                <button type="submit" className="btn btn-primary btn-sm">Search</button>
             </form>
             { isAuthenticated ? authLinks : guestLinks }
             </div>

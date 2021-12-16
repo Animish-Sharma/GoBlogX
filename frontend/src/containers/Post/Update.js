@@ -1,13 +1,16 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { useSelector } from "react-redux";
 import Header from "../../components/Header";
 
 export default function Update({ match,history }){
+    const user = useSelector(state => state.auth.user);
     const [data,setData] = useState({
         title:"",
         content:"",
         category:""
     });
+    const [post,setPost] = useState([])
     const { title,content,category } = data
     const [image,setImage] = useState("")
     const onChange = (e) => setData({...data,[e.target.name]:e.target.value});
@@ -15,6 +18,14 @@ export default function Update({ match,history }){
     const onImageChange = e =>{
         setImage(e.target.files[0])
     }
+    useEffect(()=>{
+        async function fetch () {
+            const res = await axios.get(`http://localhost:3000/api/post/${match.params.slug}`)
+            setPost(res.data.post);
+            console.log(res.data.post)
+        }
+        fetch()
+    },[match.params.slug])
     const onSubmit = async e =>{
         e.preventDefault()
         if(image === null){
@@ -36,10 +47,10 @@ export default function Update({ match,history }){
         history.push("/blog")
     }
     return (
-        <div className="container">
+        user.id === post.author_id ? <div className="container">
             <Header title={`Update: ${match.params.slug}`}/>
-            <h1 className="display-4 text-center mt-4">Update</h1>
-            <form>
+            <h1 className="display-4 text-center mt-4 ">Update</h1>
+            <form onSubmit={onSubmit}>
                 <div className="input-group mt-2">
                 <span className="input-group-text ">Title of Post</span>
                     <input required name="title" onChange={onChange} type="text" aria-label="First name" className="form-control"/>
@@ -73,5 +84,7 @@ export default function Update({ match,history }){
                 </div>
             </form>
         </div>
-    )
+    : <div>
+        <h1>Hello World</h1>
+    </div>)
 }

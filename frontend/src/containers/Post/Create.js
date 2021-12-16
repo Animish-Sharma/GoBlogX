@@ -50,7 +50,7 @@ export default function Create({ history }){
                     <input required onChange={onImageChange} type="file" className="form-control" id="inputGroupFile02"/>
                 </div>
                 <div className="input-group mt-3">
-                    <select required onChange={onChange} name="category" class="form-select form-select-sm" aria-label="Default select example">
+                    <select required onChange={onChange} name="category" className="form-select form-select-sm" aria-label="Default select example">
                     <option value="World">World</option>
                     <option value="Environment">Environment</option>
                     <option value="Technology">Technology</option>

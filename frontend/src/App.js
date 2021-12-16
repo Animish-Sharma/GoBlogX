@@ -12,6 +12,8 @@ import Create from './containers/Post/Create';
 import Category from './containers/Post/Category';
 import Detail from './containers/Post/Detail';
 import Update from './containers/Post/Update';
+import Other from './containers/Other';
+import Search from './containers/Post/Search';
 function App() {
   return (
     <Provider store={store}>
@@ -27,6 +29,8 @@ function App() {
             <Route exact path="/category/:category" component={Category} />
             <Route exact path="/post/:slug/update" component={Update} />
             <Route exact path="/post/:slug" component={Detail} />
+            <Route exact path = "/search/:term" component={Search} />
+            <Route exact path = "/profile/:username" component={Other} />
           </Switch>
         </Layout>
       </Router>

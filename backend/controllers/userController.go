@@ -167,3 +167,13 @@ func UserPost(c *fiber.Ctx) error {
 	}
 	return c.JSON(user.Posts)
 }
+
+func OtherProfiles(c *fiber.Ctx) error {
+	username := c.Params("username")
+	var user *models.User
+	database.DB.Model(&models.User{}).Where("username = ?", username).Preload("Posts").First(&user)
+
+	return c.JSON(
+		fiber.Map{"user": user},
+	)
+}

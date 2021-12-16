@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -13,16 +14,27 @@ import (
 )
 
 type Result struct {
-	ID        uint       `json:"id"`
-	AuthorID  uint       `json:"author_id"`
-	Name      string     `json:"author"`
-	Title     string     `json:"title"`
-	Content   string     `json:"content"`
-	Slug      string     `json:"slug"`
-	Category  string     `json:"category"`
-	Image     string     `json:"image"`
-	CreatedAt int        `json:"created_at"`
-	Reviews   [][]string `json:"reviews"`
+	ID        uint   `json:"id"`
+	Post      uint   `json:"post_id"`
+	Author    uint   `json:"author_id"`
+	Name      string `json:"author"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	Slug      string `json:"slug"`
+	Category  string `json:"category"`
+	Image     string `json:"image"`
+	CreatedAt int    `json:"created_at"`
+}
+
+type Comments struct {
+	ID       uint   `json:"id"`
+	Title    string `json:"title"`
+	Comment  string `json:"content"`
+	Rating   int    `json:"rating"`
+	PostID   int    `json:"post_id"`
+	AuthorID int    `json:"author_id"`
+	Name     string `json:"author"`
+	Username string `json:"username"`
 }
 
 func PostList(c *fiber.Ctx) error {
@@ -35,10 +47,12 @@ func PostList(c *fiber.Ctx) error {
 func PostDetail(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 	var result Result
-	database.DB.Model(&models.Post{}).Where("slug = ?", slug).Select("*").Joins("join users on users.id=posts.author").Order("created_at Desc").Preload("Reviews").Scan(&result)
-
+	var comments []Comments
+	database.DB.Model(&models.Post{}).Where("slug = ?", slug).Select("posts.category,posts.id,users.id,posts.title,posts.content,posts.slug,posts.image,posts.author,users.name").Joins("join users on users.id=posts.author").Order("created_at Desc").Preload("Reviews").Scan(&result)
+	database.DB.Model(&models.Review{}).Where("post_id = ?", result.ID).Select("*").Joins("join users on users.id=reviews.author").Scan(&comments)
 	return c.JSON(fiber.Map{
-		"post": result,
+		"post":   result,
+		"result": comments,
 	})
 }
 
@@ -46,7 +60,7 @@ func PostCreate(c *fiber.Ctx) error {
 	form, err := c.MultipartForm()
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
 	user, _ := utils.VerifyJwt(c)
@@ -172,4 +186,12 @@ func CategorySearch(c *fiber.Ctx) error {
 	}
 	database.DB.Scopes(utils.Paginate(c)).Model(&models.Post{}).Where("category = ?", data["category"]).Select("*").Joins("join users on users.id=posts.author").Order("created_at Desc").Scan(&result)
 	return c.JSON(fiber.Map{"posts": result})
+}
+
+func TitleSearch(c *fiber.Ctx) error {
+	var post *[]models.Post
+	term := c.Params("search")
+	search := strings.ReplaceAll(term, "+", " ")
+	database.DB.Model(&models.Post{}).Where("title LIKE ?", "%"+search+"%").Find(&post)
+	return c.JSON(post)
 }
